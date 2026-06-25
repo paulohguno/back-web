@@ -1,0 +1,30 @@
+services:
+  # ── Backend Web Service ────────────────────────────────
+  - type: web
+    name: roda-sabor-back
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3333
+      - key: DATABASE_URL
+        fromDatabase:
+          name: roda-sabor-db
+          property: connectionString
+      - key: DB_SSL
+        value: true
+      - key: JWT_SECRET
+        generateValue: true       # O Render gera automaticamente um valor seguro
+      - key: FRONTEND_URL
+        value: https://SEU-PROJETO.vercel.app  # ⚠️ Troque pela URL real do Vercel!
+
+databases:
+  # ── Banco PostgreSQL gerenciado pelo Render ─────────────
+  - name: roda-sabor-db
+    plan: free
+    databaseName: restaurante_db
+    user: postgres

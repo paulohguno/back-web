@@ -26,12 +26,30 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const porta = process.env.PORT || 3333;
 
-app.use(cors({ origin: '*' }));
+// ── CORS — permite Vercel + desenvolvimento local ────────
+const allowedOrigins = [
+  process.env.FRONTEND_URL,           // URL do Vercel (ex: https://meu-front.vercel.app)
+  'http://localhost:5173',            // Vite dev
+  'http://localhost:3000',            // alternativa local
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permite requisições sem origin (ex: curl, Postman) e origens da lista
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS bloqueado para origem: ${origin}`));
+    }
+  },
+  credentials: true,
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(express.static(path.join(__dirname, '../public')));
-
+// ── Health check — o Render usa para saber se o serviço está vivo ──
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', projeto: 'Roda & Sabor' });
 });
@@ -53,11 +71,8 @@ app.use('/api/roleta', roletaRoutes);
 app.use('/api/pedidos', pedidoRoutes);
 app.use('/api/pontos', pontosRoutes);
 
-app.get(/.*/, (req, res) => {
-  if (req.path.startsWith('/api')) return notFound(req, res);
-  res.sendFile(path.join(__dirname, '../public/index.html'));
-});
-
+// Rota 404 para rotas /api não encontradas
+app.use('/api', notFound);
 app.use(errorHandler);
 
 const startServer = async () => {
@@ -69,7 +84,7 @@ const startServer = async () => {
       console.log(`Servidor rodando na porta ${porta}`);
     });
   } catch (error) {
-    console.error('Erro ao iniciar o servidor. Confira o PostgreSQL e o arquivo .env.');
+    console.error('Erro ao iniciar o servidor. Confira o PostgreSQL e as variáveis de ambiente.');
     console.error(error);
     process.exit(1);
   }
