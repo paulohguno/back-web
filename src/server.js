@@ -1,6 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
+import cors from 'cors';
 import './config/env.js';
 import { syncModels } from './models/index.js';
 import authRoutes from './routes/authRoutes.js';
@@ -23,18 +24,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const porta = process.env.API_PORT || 3333;
+const porta = process.env.PORT || 3333;
 
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
 
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -72,7 +66,7 @@ const startServer = async () => {
     await garantirSeedInicial();
 
     app.listen(porta, () => {
-      console.log(`Servidor rodando em http://localhost:${porta}`);
+      console.log(`Servidor rodando na porta ${porta}`);
     });
   } catch (error) {
     console.error('Erro ao iniciar o servidor. Confira o PostgreSQL e o arquivo .env.');

@@ -11,15 +11,13 @@ const commonOptions = {
     underscored: true,
     freezeTableName: true,
   },
-  dialectOptions: {},
+  dialectOptions: useSsl ? {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false, // Necessário para certificados autoassinados do Render
+    }
+  } : {},
 };
-
-if (useSsl) {
-  commonOptions.dialectOptions.ssl = {
-    require: true,
-    rejectUnauthorized: false,
-  };
-}
 
 export const sequelize = connectionUri
   ? new Sequelize(connectionUri, commonOptions)
