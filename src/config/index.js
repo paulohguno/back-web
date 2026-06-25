@@ -1,8 +1,11 @@
 import './env.js';
 import { Sequelize } from 'sequelize';
 
+// Suporta DATABASE_URL (string completa) ou variáveis separadas DB_*
 const connectionUri = process.env.DATABASE_URL?.trim();
-const useSsl = ['true', '1', 'yes'].includes((process.env.DB_SSL || '').toLowerCase());
+
+// SSL obrigatório no Render
+const useSsl = !['false', '0', 'no'].includes((process.env.DB_SSL || '').toLowerCase());
 
 const commonOptions = {
   dialect: 'postgres',
@@ -11,23 +14,23 @@ const commonOptions = {
     underscored: true,
     freezeTableName: true,
   },
-  dialectOptions: useSsl ? {
+  dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false, // Necessário para certificados autoassinados do Render
-    }
-  } : {},
+      rejectUnauthorized: false, // necessário para certificados do Render
+    },
+  },
 };
 
 export const sequelize = connectionUri
   ? new Sequelize(connectionUri, commonOptions)
   : new Sequelize(
-      process.env.POSTGRES_DB || 'restaurante_db',
-      process.env.POSTGRES_USERNAME || 'postgres',
-      process.env.POSTGRES_PASSWORD || '1234',
+      process.env.DB_NAME || 'roda_sabor_db',
+      process.env.DB_USER || 'postgres',
+      process.env.DB_PASSWORD || '',
       {
-        host: process.env.POSTGRES_HOST || 'localhost',
-        port: Number(process.env.POSTGRES_PORT || 5433),
+        host: process.env.DB_HOST || 'localhost',
+        port: Number(process.env.DB_PORT || 5432),
         ...commonOptions,
       }
     );
